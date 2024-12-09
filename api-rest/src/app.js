@@ -1,16 +1,8 @@
-import express from 'express' //importando o express
+import express from 'express' //importando o express 
+import conexao from '../infra/conexao.js'
 const app = express() //criando a instância do express no app
 
 app.use(express.json())//indicar para o express ler o body com json
-
-//mock (termo para mockar dados, ou seja, estrutura basica de daados para teste)
-
-const selecoes = [
-    { id: 1, selecao: "Brasil", grupo: "G" },
-    { id: 2, selecao: "Suíça", grupo: "G" },
-    { id: 3, selecao: "Sérvia", grupo: "G" },
-    { id: 4, selecao: "Camarões", grupo: "G" }
-]
 
 function buscarSelecaoPorID(id) {
     return selecoes.filter(selecao => selecao.id == id)
@@ -21,34 +13,66 @@ function buscarIndexSeleção(id) {
     return selecoes.findIndex(selecao => selecao.id == id)
 }
 
-app.get('/', (req, res) => {     // barra para rota padrão. colocar request e response
-    res.send('Curso de node JS')
-})
 
+//ROTAS
 app.get("/selecoes", (req, res) => { //devolve todas as seleções
-    res.status(200).send(selecoes)
+    //res.status(200).send(selecoes)
+    const sql = "SELECT * FROM selecoes;"
+    conexao.query(sql, async(error, result) => {
+            try {
+                res.status(200).json(result)
+            } catch {
+                res.status(404).json(error)
+            }
+        })
 })
 
 app.get("/selecoes/:id", (req, res) => {
-    res.json(buscarSelecaoPorID(req.params.id)) //resposta em json chamando a função que devolve o id
+    //res.json(buscarSelecaoPorID(req.params.id))resposta em json chamando a função que devolve o id
+    const sql = `SELECT * FROM selecoes where id = ${req.params.id};`
+    conexao.query(sql, async(error, result) => {
+        const linha = result[0] //para retornar apenas 1
+            try {
+                res.status(200).json(linha)
+            } catch {
+                res.status(404).json(error)
+            }
+        })
 })
 
 app.post("/selecoes", (req, res) => {
-    selecoes.push(req.body) //corpo da requisição (conteúdo de fato)
-    res.status(201).send("Seleção cadastrada com sucesso") //201: criação
+    const selecao = req.body
+    const sql = "INSERT INTO selecoes SET ?"
+    conexao.query(sql,selecao, async(error, result) => {
+            try {
+                res.status(201).json(result)
+            } catch {
+                res.status(400).json(error)
+            }
+        })
 })
 
 app.put("/selecoes/:id", (req, res) => {
-    let index = buscarIndexSeleção(req.params.id)
-    selecoes[index].selecao = req.body.selecao
-    selecoes[index].grupo = req.body.grupo
-    res.json(selecoes[index])
+    const selecao = req.body
+    const sql = `Update selecoes SET ? where id = ?`
+    conexao.query(sql, [selecao, req.params.id], async(error, result) => {
+            try {
+                res.status(200).json(result)
+            } catch {
+                res.status(404).json(error)
+            }
+        })
 })
 
 app.delete("/selecoes/:id", (req, res) => {
-    let index = buscarIndexSeleção(req.params.id)
-    selecoes.splice(index, 1) //corta apenas 1 elemento da lista
-    res.send(`Seleção com id ${req.params.id} excluída com sucesso`)
+    const sql = `DELETE FROM selecoes where id = ${req.params.id};`
+    conexao.query(sql, async(error, result) => {
+            try {
+                res.status(200).json(result)
+            } catch {
+                res.status(404).json(error)
+            }
+        })
 })
 
 export default app
