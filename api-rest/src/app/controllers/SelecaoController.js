@@ -1,59 +1,31 @@
-import conexao from '../database/conexao'
+import SelecaoRepository from '../repositories/SelecaoRepository'
 
 class SelecaoController {
 
-    index(req, res) { //devolve todas as seleções
-        const sql = "SELECT * FROM selecoes;"
-        conexao.query(sql, async (error, result) => {
-            try {
-                res.status(200).json(result)
-            } catch {
-                res.status(404).json(error)
-            }
-        })
+    async index(req, res) { //devolve todas as seleções
+        const row = await SelecaoRepository.findAll()
+        res.json(row)
     }
-    show(req, res) {
-        const sql = `SELECT * FROM selecoes where id = ${req.params.id};`
-        conexao.query(sql, async (error, result) => {
-            const linha = result[0] //para retornar apenas 1
-            try {
-                res.status(200).json(linha)
-            } catch {
-                res.status(404).json(error)
-            }
-        })
+    async show(req, res) {
+        const id = req.params.id
+        const row = await SelecaoRepository.findById(id)
+        res.json(row)
     }
-    store(req, res) {
+    async store(req, res) {
         const selecao = req.body
-        const sql = "INSERT INTO selecoes SET ?"
-        conexao.query(sql, selecao, async (error, result) => {
-            try {
-                res.status(201).json(result)
-            } catch {
-                res.status(400).json(error)
-            }
-        })
+        const row = await SelecaoRepository.store(selecao)
+        res.json(row)
     }
-    update(req, res) {
+    async update(req, res) {
         const selecao = req.body
-        const sql = `Update selecoes SET ? where id = ?`
-        conexao.query(sql, [selecao, req.params.id], async (error, result) => {
-            try {
-                res.status(200).json(result)
-            } catch {
-                res.status(404).json(error)
-            }
-        })
+        const id = req.params.id
+        const row = await SelecaoRepository.update(selecao, id)
+        res.json(row)
     }
-    delete(req, res) {
-        const sql = `DELETE FROM selecoes where id = ${req.params.id};`
-        conexao.query(sql, async (error, result) => {
-            try {
-                res.status(200).json(result)
-            } catch {
-                res.status(404).json(error)
-            }
-        })
+    async delete(req, res) {
+        const id = req.params.id
+        const row = await SelecaoRepository.delete(id)
+        res.json(row)
     }
 
 }
